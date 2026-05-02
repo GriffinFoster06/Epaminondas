@@ -178,6 +178,14 @@ export function getPhalanxesThrough(state, c, r) {
 
 // Single-piece moves (1 square any direction, to empty cell)
 function getSinglePieceMoves(state, c, r) {
+  const color = state.get(c, r);
+  if (!color) return [];
+  for (const [dc, dr] of DIRS) {
+    const nc = c + dc, nr = r + dr;
+    if (inBounds(nc, nr) && state.get(nc, nr) === color) {
+      return [];
+    }
+  }
   const moves = [];
   for (const [dc, dr] of DIRS) {
     const nc = c + dc, nr = r + dr;
