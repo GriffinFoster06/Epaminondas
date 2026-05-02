@@ -1,0 +1,239 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Epaminondas</title>
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+
+<!-- ═══════════════════════════════════════════════════════════ MENU ══ -->
+<div id="screen-menu" class="screen active">
+  <div class="menu-hero">
+    <h2>Epaminondas</h2>
+    <p>Abstract strategy &middot; 2 players &middot; Robert Abbott, 1975</p>
+  </div>
+
+  <div class="menu-buttons">
+    <button id="btn-local"    class="btn btn-gold">⚔ Local 2-Player</button>
+    <button id="btn-vs-cpu"   class="btn btn-violet">🤖 vs Computer</button>
+    <button id="btn-host"     class="btn">🌐 Host Online Game</button>
+    <button id="btn-join"     class="btn">🔗 Join by Code</button>
+    <button id="btn-tutorial" class="btn">📖 Tutorial</button>
+  </div>
+
+  <!-- AI Setup Panel (appears after clicking vs Computer) -->
+  <div id="ai-setup-panel" class="hidden">
+    <h3>Difficulty</h3>
+    <div class="ai-diff-row">
+      <button class="ai-diff-btn" data-diff="beginner">Beginner</button>
+      <button class="ai-diff-btn active" data-diff="medium">Medium</button>
+      <button class="ai-diff-btn" data-diff="easy">Easy</button>
+      <button class="ai-diff-btn" data-diff="hard">Hard</button>
+    </div>
+    <h3 style="margin-top:4px">Play as</h3>
+    <div class="ai-color-row">
+      <button id="btn-ai-start-white" class="btn btn-sm btn-gold">White (First)</button>
+      <button id="btn-ai-start-black" class="btn btn-sm">Black (Second)</button>
+    </div>
+  </div>
+
+  <!-- Join by code panel -->
+  <div id="join-panel" class="hidden">
+    <input id="join-code-input" type="text" placeholder="ROOM CODE" maxlength="8"
+           autocomplete="off" spellcheck="false">
+    <button id="btn-join-confirm" class="btn btn-primary">Join Game</button>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════════ LOBBY ══ -->
+<div id="screen-lobby" class="screen">
+  <div class="lobby-box">
+    <h2>Game Hosted</h2>
+    <p class="text-dim">Share this room code or link with your friend:</p>
+    <div class="room-code" id="lobby-room-code">----</div>
+    <div class="lobby-link-row">
+      <div id="lobby-link" class="text-dim">–</div>
+      <button id="btn-copy-link" class="btn btn-sm">Copy Link</button>
+    </div>
+    <div id="lobby-waiting" class="lobby-status">
+      <span class="spinner"></span>Waiting for opponent…
+    </div>
+    <div id="lobby-ready" class="lobby-status hidden">
+      ✓ Opponent connected! Starting game…
+    </div>
+  </div>
+  <button id="btn-lobby-cancel" class="btn btn-sm btn-danger" style="margin-top:10px">Cancel</button>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════════ GAME ══ -->
+<div id="screen-game" class="screen">
+  <header>
+    <h1>Epaminondas</h1>
+    <span id="status-turn" class="subtitle">–</span>
+    <nav>
+      <button id="btn-settings-toggle" class="btn btn-sm btn-icon" title="Settings">⚙</button>
+      <button id="btn-rules-toggle"    class="btn btn-sm">Rules ▾</button>
+      <button id="btn-resign"          class="btn btn-sm btn-danger">Resign</button>
+      <button id="btn-rematch"         class="btn btn-sm">Rematch</button>
+      <button id="btn-menu"            class="btn btn-sm">Menu</button>
+    </nav>
+  </header>
+
+  <!-- Rules slide-down -->
+  <div id="rules-panel" class="slide-panel">
+    <div class="slide-panel-inner">
+      <h4>Quick Rules</h4>
+      <p><strong>Single piece:</strong> 1 square any direction, empty only, cannot capture.</p>
+      <p><strong>Phalanx</strong> (2+ pieces in a straight line, no gaps):
+         moves along its axis up to N squares (N = phalanx length).</p>
+      <p><strong>Capture:</strong> Phalanx of N captures an enemy phalanx of &lt;N pieces directly ahead.</p>
+      <p><strong>Win:</strong> At the start of your turn, more pieces on opponent's back row than they have on yours.</p>
+    </div>
+  </div>
+
+  <!-- Settings slide-down -->
+  <div id="settings-panel" class="slide-panel">
+    <div class="slide-panel-inner">
+      <h4>Settings</h4>
+      <div class="settings-row">
+        <label class="settings-label">
+          Sound effects
+          <span class="sub">Web Audio synthesis</span>
+        </label>
+        <label class="toggle-switch">
+          <input type="checkbox" id="settings-sound-toggle" checked>
+          <span class="toggle-track"></span>
+        </label>
+      </div>
+      <div class="settings-row" style="flex-direction:column;align-items:flex-start;gap:6px">
+        <span class="settings-label">AI Difficulty <span class="sub">Affects ongoing AI game</span></span>
+        <div class="settings-diff-row">
+          <button class="settings-diff-btn" data-diff="beginner">Beginner</button>
+          <button class="settings-diff-btn active" data-diff="medium">Medium</button>
+          <button class="settings-diff-btn" data-diff="easy">Easy</button>
+          <button class="settings-diff-btn" data-diff="hard">Hard</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="game-body">
+    <div class="board-area">
+      <canvas id="board-canvas"></canvas>
+    </div>
+
+    <aside class="game-sidebar">
+      <!-- Status -->
+      <div class="sidebar-section">
+        <div class="section-label">Status</div>
+        <div id="status-score">–</div>
+        <div id="status-wait" class="hidden">Waiting for opponent…</div>
+        <!-- AI thinking indicator -->
+        <div id="ai-thinking-indicator" class="hidden">
+          <div class="ai-dot"></div>
+          <span>Thinking…</span>
+        </div>
+      </div>
+
+      <!-- Player / mode info -->
+      <div class="sidebar-section">
+        <div class="section-label">Player</div>
+        <div id="color-indicator" class="color-indicator">
+          <div class="color-dot white" id="my-color-dot"></div>
+          <span id="my-color-label">Playing White</span>
+        </div>
+        <div id="ai-mode-badge" class="hidden">vs AI · medium</div>
+      </div>
+
+      <!-- Legend -->
+      <div class="sidebar-section">
+        <div class="section-label">Goal Rows</div>
+        <div class="legend">
+          <div class="legend-row">
+            <div class="legend-swatch ls-white-goal"></div>
+            Row 1 — White's goal
+          </div>
+          <div class="legend-row">
+            <div class="legend-swatch ls-black-goal"></div>
+            Row 12 — Black's goal
+          </div>
+        </div>
+      </div>
+
+      <!-- Move History -->
+      <div class="sidebar-section move-history-wrap" style="flex:1;min-height:0">
+        <div class="section-label">Move History</div>
+        <ul id="move-history-list"></ul>
+      </div>
+
+      <!-- Actions -->
+      <div class="sidebar-section">
+        <div class="sidebar-actions">
+          <button id="btn-undo" class="btn btn-sm hidden">↩ Undo</button>
+        </div>
+      </div>
+    </aside>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════ GAME OVER ══ -->
+<div id="screen-gameover" class="screen">
+  <div class="gameover-box">
+    <div id="gameover-title">–</div>
+    <p id="gameover-msg">–</p>
+    <p id="gameover-ai-msg" class="gameover-ai-msg hidden">–</p>
+    <div class="gameover-actions">
+      <button id="btn-gameover-rematch" class="btn btn-primary">Rematch</button>
+      <button id="btn-gameover-menu"    class="btn">Menu</button>
+    </div>
+  </div>
+</div>
+
+<!-- ════════════════════════════════════════════════════════ TUTORIAL ══ -->
+<div id="screen-tutorial" class="screen">
+  <div class="tut-panel">
+    <div class="tut-header">
+      <h2>Tutorial</h2>
+      <span id="tut-step-num">1 / 10</span>
+      <button id="btn-tut-close" class="btn btn-xs">✕</button>
+    </div>
+    <div id="tut-title"></div>
+    <div id="tut-body"></div>
+    <div id="tut-instruction" class="hidden"></div>
+
+    <button id="btn-tut-rules-toggle" class="btn btn-sm" style="margin-top:4px">
+      📋 Rules Reference ▾
+    </button>
+    <div id="tut-rules-panel" class="slide-panel">
+      <div class="slide-panel-inner">
+        <h4>Rules Cheat Sheet</h4>
+        <p><strong>Board:</strong> 14 × 12. White: rows 11–12 (bottom). Black: rows 1–2 (top). White moves first.</p>
+        <p><strong>Single piece:</strong> 1 square any direction, empty only. Cannot capture.</p>
+        <p><strong>Phalanx</strong> (2+ pieces in a straight line, no gaps): moves along its own axis.
+           Max distance = phalanx length. Any sub-line can be used as a phalanx.</p>
+        <p><strong>Capture:</strong> Phalanx of N hits a smaller enemy phalanx (&lt;N) head-on → all removed.</p>
+        <p><strong>Win:</strong> At the START of your turn, more pieces on opponent's back row than they have on yours.</p>
+        <p><strong>Tip:</strong> Diagonal phalanxes are hard to block. Length = power.</p>
+      </div>
+    </div>
+
+    <div class="tut-nav">
+      <button id="btn-tut-prev"  class="btn btn-sm" disabled>← Prev</button>
+      <button id="btn-tut-reset" class="btn btn-sm">Reset</button>
+      <button id="btn-tut-next"  class="btn btn-sm btn-primary">Next →</button>
+    </div>
+  </div>
+
+  <div class="tut-board-area">
+    <canvas id="tut-canvas"></canvas>
+  </div>
+</div>
+
+<script type="module">
+  import { init } from './js/ui.js';
+  document.addEventListener('DOMContentLoaded', init);
+</script>
+</body>
+</html>
