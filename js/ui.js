@@ -292,8 +292,11 @@ function startLocal() {
 // ── Game Start: Host/Guest ────────────────────────────────────────────────────
 async function startHost() {
   if (!onlineSupported) {
-    setOnlineSupported(false);
-    return;
+    const available = await updateOnlineAvailability();
+    if (!available) {
+      setOnlineSupported(false);
+      return;
+    }
   }
   if (net) net.disconnect();
   net = new Network();
