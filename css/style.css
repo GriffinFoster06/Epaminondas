@@ -42,7 +42,10 @@ html, body {
 ::-webkit-scrollbar-thumb:hover { background: var(--accent); }
 
 /* ── Screens ── */
-.screen { display: none; height: 100vh; height: 100dvh; overflow: auto; }
+.screen { display: none; height: 100vh; overflow: auto; }
+@supports (height: 100dvh) {
+  .screen { height: 100dvh; }
+}
 .screen.active { display: flex; flex-direction: column; }
 
 /* ── Header ── */

@@ -162,8 +162,11 @@ export function init() {
 
 function detectOnlineSupport() {
   if (window.location.protocol === 'file:') return false;
-  const host = window.location.hostname || '';
-  return !host.endsWith('github.io');
+  const host = (window.location.hostname || '').toLowerCase();
+  if (!host) return false;
+  const parts = host.split('.');
+  const isGithubPages = parts.length >= 2 && parts.slice(-2).join('.') === 'github.io';
+  return !isGithubPages;
 }
 
 function updateOnlineAvailability() {
