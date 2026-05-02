@@ -16,6 +16,15 @@ python start.py
 
 The browser opens automatically. For online play, the script attempts to create a public tunnel via `localhost.run` and prints a shareable URL in the terminal.
 
+## GitHub Pages
+
+This repository includes a GitHub Pages workflow for the static site. Pages supports **local play, AI play, and tutorials**. Online multiplayer still requires running `python start.py` locally.
+
+To publish the site:
+
+1. Enable GitHub Pages in repo settings and set **Build and deployment** to **GitHub Actions**.
+2. Push to `main` (or run the workflow manually).
+
 ## Online Multiplayer
 
 1. Run `python start.py` — note the `https://xxxxx.localhost.run` URL printed in the terminal

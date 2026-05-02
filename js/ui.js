@@ -40,6 +40,7 @@ let myColor      = null;        // WHITE | BLACK | null (local/ai-both)
 let aiColor      = null;        // which color the AI plays
 let aiDifficulty = 'medium';
 let net          = null;
+let onlineSupported = false;
 
 // History / undo
 let stateHistory = [];          // array of GameState snapshots (before each move)
@@ -79,7 +80,14 @@ export function init() {
   document.getElementById('btn-local')   .addEventListener('click', startLocal);
   document.getElementById('btn-vs-cpu')  .addEventListener('click', toggleAiSetup);
   document.getElementById('btn-host')    .addEventListener('click', startHost);
-  document.getElementById('btn-join')    .addEventListener('click', () => {
+  document.getElementById('btn-join')    .addEventListener('click', async () => {
+    if (!onlineSupported) {
+      await updateOnlineAvailability();
+      if (!onlineSupported) {
+        setOnlineSupported(false);
+        return;
+      }
+    }
     document.getElementById('join-panel').classList.remove('hidden');
   });
   document.getElementById('btn-join-confirm').addEventListener('click', () => {
@@ -143,9 +151,48 @@ export function init() {
   // Auto-join from URL
   const params   = new URLSearchParams(window.location.search);
   const joinRoom = params.get('join');
-  if (joinRoom) {
-    document.getElementById('join-code-input').value = joinRoom;
-    startGuest(joinRoom.toUpperCase());
+  updateOnlineAvailability().then((supported) => {
+    if (!joinRoom) return;
+    if (supported) {
+      document.getElementById('join-code-input').value = joinRoom;
+      startGuest(joinRoom.toUpperCase());
+    } else {
+      setOnlineSupported(false);
+    }
+  });
+}
+
+// Probe the server for the multiplayer endpoint without creating a room.
+// File:// origins cannot reach the server, so short-circuit in that case.
+async function detectOnlineSupport() {
+  if (window.location.protocol === 'file:') return false;
+  try {
+    const res = await fetch('/room', { method: 'OPTIONS' });
+    return res.ok;
+  } catch (e) {
+    return false;
+  }
+}
+
+async function updateOnlineAvailability() {
+  const supported = await detectOnlineSupport();
+  setOnlineSupported(supported);
+  return supported;
+}
+
+function setOnlineSupported(supported) {
+  onlineSupported = supported;
+  const hostBtn = document.getElementById('btn-host');
+  const joinBtn = document.getElementById('btn-join');
+  const note   = document.getElementById('online-disabled-note');
+
+  if (hostBtn) hostBtn.disabled = !onlineSupported;
+  if (joinBtn) joinBtn.disabled = !onlineSupported;
+  if (note) note.classList.toggle('hidden', onlineSupported);
+
+  if (!supported) {
+    const joinPanel = document.getElementById('join-panel');
+    if (joinPanel) joinPanel.classList.add('hidden');
   }
 }
 
@@ -247,6 +294,13 @@ function startLocal() {
 
 // ── Game Start: Host/Guest ────────────────────────────────────────────────────
 async function startHost() {
+  if (!onlineSupported) {
+    const available = await updateOnlineAvailability();
+    if (!available) {
+      setOnlineSupported(false);
+      return;
+    }
+  }
   if (net) net.disconnect();
   net = new Network();
 
@@ -296,6 +350,13 @@ function updateLobbyLink() {
 }
 
 async function startGuest(roomId) {
+  if (!onlineSupported) {
+    await updateOnlineAvailability();
+    if (!onlineSupported) {
+      setOnlineSupported(false);
+      return;
+    }
+  }
   if (net) net.disconnect();
   net = new Network();
 

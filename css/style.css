@@ -42,7 +42,11 @@ html, body {
 ::-webkit-scrollbar-thumb:hover { background: var(--accent); }
 
 /* ── Screens ── */
+/* Use dynamic viewport height when supported; older browsers fall back to 100vh. */
 .screen { display: none; height: 100vh; overflow: auto; }
+@supports (height: 100dvh) {
+  .screen { height: 100dvh; }
+}
 .screen.active { display: flex; flex-direction: column; }
 
 /* ── Header ── */
@@ -170,7 +174,7 @@ header nav { margin-left: auto; display: flex; gap: 6px; align-items: center; fl
   display: flex;
   flex-direction: column;
   gap: 12px;
-  width: 300px;
+  width: min(320px, 90vw);
 }
 .menu-buttons .btn {
   padding: 13px;
@@ -182,7 +186,7 @@ header nav { margin-left: auto; display: flex; gap: 6px; align-items: center; fl
   display: flex;
   flex-direction: column;
   gap: 8px;
-  width: 300px;
+  width: min(320px, 90vw);
 }
 #join-panel.hidden { display: none; }
 
@@ -212,7 +216,7 @@ header nav { margin-left: auto; display: flex; gap: 6px; align-items: center; fl
   border: 1px solid var(--border2);
   border-radius: 10px;
   padding: 18px 20px;
-  width: 300px;
+  width: min(320px, 90vw);
   display: flex;
   flex-direction: column;
   gap: 12px;
@@ -248,6 +252,22 @@ header nav { margin-left: auto; display: flex; gap: 6px; align-items: center; fl
 }
 .ai-color-row { display: flex; gap: 8px; }
 .ai-color-row .btn { flex: 1; text-align: center; }
+
+.menu-note {
+  width: min(360px, 92vw);
+  background: var(--surface);
+  border: 1px solid var(--border2);
+  border-radius: 10px;
+  padding: 12px 14px;
+  font-size: 0.8rem;
+  color: var(--text-dim);
+  text-align: center;
+  line-height: 1.5;
+}
+.menu-note-code {
+  font-family: monospace;
+  color: var(--text);
+}
 
 /* ── Lobby Screen ── */
 #screen-lobby {
@@ -706,6 +726,8 @@ header nav { margin-left: auto; display: flex; gap: 6px; align-items: center; fl
   .game-sidebar { display: none; }
   .tut-panel { width: 100%; max-height: 44vh; border-right: none; border-bottom: 1px solid var(--border); }
   #screen-tutorial { flex-direction: column; }
+  header { flex-wrap: wrap; }
+  header nav { width: 100%; justify-content: flex-end; }
   header nav .btn-sm { padding: 4px 8px; font-size: 0.76rem; }
   .menu-hero h2 { font-size: 2rem; }
 }
