@@ -40,7 +40,7 @@ let myColor      = null;        // WHITE | BLACK | null (local/ai-both)
 let aiColor      = null;        // which color the AI plays
 let aiDifficulty = 'medium';
 let net          = null;
-let onlineSupported = true;
+let onlineSupported = false;
 
 // History / undo
 let stateHistory = [];          // array of GameState snapshots (before each move)
@@ -82,7 +82,7 @@ export function init() {
   document.getElementById('btn-host')    .addEventListener('click', startHost);
   document.getElementById('btn-join')    .addEventListener('click', () => {
     if (!onlineSupported) {
-      showOnlineDisabled();
+      setOnlineSupported(false);
       return;
     }
     document.getElementById('join-panel').classList.remove('hidden');
@@ -146,31 +146,37 @@ export function init() {
   );
 
   // Auto-join from URL
-  updateOnlineAvailability();
-
   const params   = new URLSearchParams(window.location.search);
   const joinRoom = params.get('join');
-  if (joinRoom) {
-    if (onlineSupported) {
+  updateOnlineAvailability().then((supported) => {
+    if (!joinRoom) return;
+    if (supported) {
       document.getElementById('join-code-input').value = joinRoom;
       startGuest(joinRoom.toUpperCase());
     } else {
-      showOnlineDisabled();
+      setOnlineSupported(false);
     }
+  });
+}
+
+async function detectOnlineSupport() {
+  if (window.location.protocol === 'file:') return false;
+  try {
+    const res = await fetch('./room', { method: 'OPTIONS' });
+    return res.ok;
+  } catch (e) {
+    return false;
   }
 }
 
-function detectOnlineSupport() {
-  if (window.location.protocol === 'file:') return false;
-  const host = (window.location.hostname || '').toLowerCase();
-  if (!host) return false;
-  const parts = host.split('.');
-  const isGithubPages = parts.length >= 2 && parts.slice(-2).join('.') === 'github.io';
-  return !isGithubPages;
+async function updateOnlineAvailability() {
+  const supported = await detectOnlineSupport();
+  setOnlineSupported(supported);
+  return supported;
 }
 
-function updateOnlineAvailability() {
-  onlineSupported = detectOnlineSupport();
+function setOnlineSupported(supported) {
+  onlineSupported = supported;
   const hostBtn = document.getElementById('btn-host');
   const joinBtn = document.getElementById('btn-join');
   const note   = document.getElementById('online-disabled-note');
@@ -179,15 +185,10 @@ function updateOnlineAvailability() {
   if (joinBtn) joinBtn.disabled = !onlineSupported;
   if (note) note.classList.toggle('hidden', onlineSupported);
 
-  if (!onlineSupported) {
+  if (!supported) {
     const joinPanel = document.getElementById('join-panel');
     if (joinPanel) joinPanel.classList.add('hidden');
   }
-}
-
-function showOnlineDisabled() {
-  const note = document.getElementById('online-disabled-note');
-  if (note) note.classList.remove('hidden');
 }
 
 // ── AI Worker lifecycle ───────────────────────────────────────────────────────
@@ -289,7 +290,7 @@ function startLocal() {
 // ── Game Start: Host/Guest ────────────────────────────────────────────────────
 async function startHost() {
   if (!onlineSupported) {
-    showOnlineDisabled();
+    setOnlineSupported(false);
     return;
   }
   if (net) net.disconnect();
@@ -342,7 +343,7 @@ function updateLobbyLink() {
 
 async function startGuest(roomId) {
   if (!onlineSupported) {
-    showOnlineDisabled();
+    setOnlineSupported(false);
     return;
   }
   if (net) net.disconnect();
