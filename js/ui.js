@@ -160,6 +160,7 @@ export function init() {
 }
 
 // Probe the server for the multiplayer endpoint without creating a room.
+// File:// origins cannot reach the server, so short-circuit in that case.
 async function detectOnlineSupport() {
   if (window.location.protocol === 'file:') return false;
   try {
