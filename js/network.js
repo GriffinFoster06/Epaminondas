@@ -49,6 +49,7 @@ export class Network {
     if (this._sse) this._sse.close();
     const url = `${this._baseUrl}/events?roomId=${this.roomId}&playerId=${this.playerId}`;
     this._sse = new EventSource(url);
+    const currentSse = this._sse;
 
     this._sse.addEventListener('move', e => {
       this._emit('move', JSON.parse(e.data));
@@ -70,6 +71,7 @@ export class Network {
       this._emit('connection_error', {});
       // Try to reconnect after a short delay
       setTimeout(() => {
+        if (!this._sse || this._sse !== currentSse) return;
         if (this._sse.readyState === EventSource.CLOSED) {
           this._subscribe();
         }

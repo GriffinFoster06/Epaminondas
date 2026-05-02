@@ -275,6 +275,8 @@ async function startHost() {
     terminateWorker();
     updateColorIndicator();
     updateAIBadge();
+    updateMoveHistory();
+    updateUndoVisibility();
 
     document.getElementById('lobby-room-code').textContent = roomId;
     updateLobbyLink();
@@ -541,12 +543,14 @@ function onNetworkMove(moveData) {
   if (moveData.type === 'phalanx') {
     renderer.animateMove(gameState, moveData, () => {
       gameState = newState;
+      addMoveHistory(moveData, prevState);
       const w = newState.checkWin();
       if (w) { sound.lose(); showGameOver(w); }
       else { updateStatus(); redraw(); }
     });
   } else {
     gameState = newState;
+    addMoveHistory(moveData, prevState);
     const w = newState.checkWin();
     if (w) { sound.lose(); showGameOver(w); }
     else { updateStatus(); redraw(); }
