@@ -42,6 +42,7 @@ html, body {
 ::-webkit-scrollbar-thumb:hover { background: var(--accent); }
 
 /* ── Screens ── */
+/* Use dynamic viewport height when supported to avoid mobile browser chrome shrink. */
 .screen { display: none; height: 100vh; overflow: auto; }
 @supports (height: 100dvh) {
   .screen { height: 100dvh; }

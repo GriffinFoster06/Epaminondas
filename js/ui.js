@@ -159,10 +159,11 @@ export function init() {
   });
 }
 
+// Probe the server for the multiplayer endpoint without creating a room.
 async function detectOnlineSupport() {
   if (window.location.protocol === 'file:') return false;
   try {
-    const res = await fetch('./room', { method: 'OPTIONS' });
+    const res = await fetch('/room', { method: 'OPTIONS' });
     return res.ok;
   } catch (e) {
     return false;
