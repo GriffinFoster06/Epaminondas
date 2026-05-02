@@ -348,8 +348,11 @@ function updateLobbyLink() {
 
 async function startGuest(roomId) {
   if (!onlineSupported) {
-    setOnlineSupported(false);
-    return;
+    await updateOnlineAvailability();
+    if (!onlineSupported) {
+      setOnlineSupported(false);
+      return;
+    }
   }
   if (net) net.disconnect();
   net = new Network();
