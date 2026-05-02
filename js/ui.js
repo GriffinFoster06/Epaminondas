@@ -80,10 +80,13 @@ export function init() {
   document.getElementById('btn-local')   .addEventListener('click', startLocal);
   document.getElementById('btn-vs-cpu')  .addEventListener('click', toggleAiSetup);
   document.getElementById('btn-host')    .addEventListener('click', startHost);
-  document.getElementById('btn-join')    .addEventListener('click', () => {
+  document.getElementById('btn-join')    .addEventListener('click', async () => {
     if (!onlineSupported) {
-      setOnlineSupported(false);
-      return;
+      await updateOnlineAvailability();
+      if (!onlineSupported) {
+        setOnlineSupported(false);
+        return;
+      }
     }
     document.getElementById('join-panel').classList.remove('hidden');
   });
