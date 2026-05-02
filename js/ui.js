@@ -40,6 +40,7 @@ let myColor      = null;        // WHITE | BLACK | null (local/ai-both)
 let aiColor      = null;        // which color the AI plays
 let aiDifficulty = 'medium';
 let net          = null;
+let onlineSupported = true;
 
 // History / undo
 let stateHistory = [];          // array of GameState snapshots (before each move)
@@ -80,6 +81,10 @@ export function init() {
   document.getElementById('btn-vs-cpu')  .addEventListener('click', toggleAiSetup);
   document.getElementById('btn-host')    .addEventListener('click', startHost);
   document.getElementById('btn-join')    .addEventListener('click', () => {
+    if (!onlineSupported) {
+      showOnlineDisabled();
+      return;
+    }
     document.getElementById('join-panel').classList.remove('hidden');
   });
   document.getElementById('btn-join-confirm').addEventListener('click', () => {
@@ -141,12 +146,45 @@ export function init() {
   );
 
   // Auto-join from URL
+  updateOnlineAvailability();
+
   const params   = new URLSearchParams(window.location.search);
   const joinRoom = params.get('join');
   if (joinRoom) {
-    document.getElementById('join-code-input').value = joinRoom;
-    startGuest(joinRoom.toUpperCase());
+    if (onlineSupported) {
+      document.getElementById('join-code-input').value = joinRoom;
+      startGuest(joinRoom.toUpperCase());
+    } else {
+      showOnlineDisabled();
+    }
   }
+}
+
+function detectOnlineSupport() {
+  if (window.location.protocol === 'file:') return false;
+  const host = window.location.hostname || '';
+  return !host.endsWith('github.io');
+}
+
+function updateOnlineAvailability() {
+  onlineSupported = detectOnlineSupport();
+  const hostBtn = document.getElementById('btn-host');
+  const joinBtn = document.getElementById('btn-join');
+  const note   = document.getElementById('online-disabled-note');
+
+  if (hostBtn) hostBtn.disabled = !onlineSupported;
+  if (joinBtn) joinBtn.disabled = !onlineSupported;
+  if (note) note.classList.toggle('hidden', onlineSupported);
+
+  if (!onlineSupported) {
+    const joinPanel = document.getElementById('join-panel');
+    if (joinPanel) joinPanel.classList.add('hidden');
+  }
+}
+
+function showOnlineDisabled() {
+  const note = document.getElementById('online-disabled-note');
+  if (note) note.classList.remove('hidden');
 }
 
 // ── AI Worker lifecycle ───────────────────────────────────────────────────────
@@ -247,6 +285,10 @@ function startLocal() {
 
 // ── Game Start: Host/Guest ────────────────────────────────────────────────────
 async function startHost() {
+  if (!onlineSupported) {
+    showOnlineDisabled();
+    return;
+  }
   if (net) net.disconnect();
   net = new Network();
 
@@ -296,6 +338,10 @@ function updateLobbyLink() {
 }
 
 async function startGuest(roomId) {
+  if (!onlineSupported) {
+    showOnlineDisabled();
+    return;
+  }
   if (net) net.disconnect();
   net = new Network();
 
